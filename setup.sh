@@ -1,4 +1,4 @@
-export DATABASE_URL='postgres://armanyadalmia:armanyadalmia@localhost:5433/casting_agency'
+export DATABASE_URL='postgres://sxfmtwpibkgtcj:b095c9ef1612dd9e4172c9316db33a0623a0d98ee6dea0a233e9d06856aad6fe@ec2-52-200-48-116.compute-1.amazonaws.com:5432/daglhia8h4fpuc'
 export TEST_DATABASE_URL='postgres://armanyadalmia:armanyadalmia@localhost:5433/test_casting_agency'
 
 export AUTH0_DOMAIN='fsndauthorization.us.auth0.com'
