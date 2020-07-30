@@ -12,7 +12,7 @@ casting_assistant_header = { 'Authorization': 'Bearer {}'.format(os.environ['CAS
 casting_director_header = { 'Authorization': 'Bearer {}'.format(os.environ['CASTING_DIRECTOR_TOKEN']) }
 executive_producer_header = { 'Authorization': 'Bearer {}'.format(os.environ['EXECUTIVE_PRODUCER_TOKEN']) }
 
-class CastingAgencyTestCase(unittest.TestCase):
+class AgencyTestCase(unittest.TestCase):
     """This class represents the casting agency test case"""
 
     def setUp(self):
@@ -27,6 +27,7 @@ class CastingAgencyTestCase(unittest.TestCase):
             self.db = SQLAlchemy()
             self.db.init_app(self.app)
             # create all tables
+            self.db.drop_all()
             self.db.create_all()
     
     def tearDown(self):
@@ -42,14 +43,6 @@ class CastingAgencyTestCase(unittest.TestCase):
     new_movie = {
         'title': 'Test Movie',
         'release_date': date.today()
-    }
-
-    proper_quiz_question = {
-        'quiz_category': {
-            'type': 'Entertainment',
-            'id': 5
-        },
-        'previous_questions': [2, 6]
     }
 
     """
@@ -100,7 +93,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['actors']))
-        self.assertEqual(data['actors'], self.new_actor)
+        self.assertTrue(data['actors'])
 
     def test_401_create_new_actor(self):
         res = self.client().post('/actors', json=self.new_actor)
@@ -120,7 +113,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['movies']))
-        self.assertEqual(data['movies'], self.new_movie)
+        self.assertTrue(data['movies'])
 
     def test_401_create_new_movie(self):
         res = self.client().post('/movies', json=self.new_movie)
@@ -162,13 +155,13 @@ class CastingAgencyTestCase(unittest.TestCase):
     PATCH test for /movies/<id>
     """
     def test_update_movie_title(self):
-        res = self.client().patch('/movies/1', json={'title': 'Mall Cop'}, headers = casting_director_header)
+        res = self.client().patch('/movies/1', json={'title': 'Update Movie'}, headers = casting_director_header)
         data = json.loads(res.data)
         movie = Movie.query.filter(Movie.id == 1).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(movie.format()['title'], 'Mall Cop')
+        self.assertEqual(movie.format()['title'], 'Update Movie')
 
     def test_422_update_movie(self):
         res = self.client().patch('/movies/1', headers = casting_director_header)
@@ -190,61 +183,61 @@ class CastingAgencyTestCase(unittest.TestCase):
     DELETE test for /actors
     """
     def test_delete_actor(self):
-        res = self.client().delete('/actors/2', headers = casting_director_header)
+        res = self.client().delete('/actors/1', headers = casting_director_header)
         data = json.loads(res.data)
 
-        actor = Actor.query.filter(Actor.id == 2).one_or_none()
+        actor = Actor.query.filter(Actor.id == 1).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 2)
+        self.assertEqual(data['delete'], '1')
         self.assertEqual(actor, None)
 
-    def test_404_delete_actor(self):
+    def test_422_delete_actor(self):
         res = self.client().delete('/actors/1000', headers = casting_director_header)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'unprocessable')
 
     def test_403_delete_actor(self):
-        res = self.client().delete('/actors/2', headers = casting_assistant_header)
+        res = self.client().delete('/actors/1', headers = casting_assistant_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 403)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Permission not found')
+        self.assertEqual(data['message'], 'Permission not found.')
 
     """
     DELETE test for /movies
     """
     def test_delete_movie(self):
-        res = self.client().delete('/movies/2', headers = executive_producer_header)
+        res = self.client().delete('/movies/1', headers = executive_producer_header)
         data = json.loads(res.data)
 
-        movie = Movie.query.filter(Movie.id == 2).one_or_none()
+        movie = Movie.query.filter(Movie.id == 1).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 2)
+        self.assertEqual(data['delete'], '1')
         self.assertEqual(movie, None)
 
-    def test_404_delete_actor(self):
-        res = self.client().delete('/actors/1000', headers = executive_producer_header)
+    def test_422_delete_movie(self):
+        res = self.client().delete('/movies/1000', headers = executive_producer_header)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'unprocessable')
 
-    def test_403_delete_actor(self):
-        res = self.client().delete('/actors/2', headers = casting_director_header)
+    def test_403_delete_movie(self):
+        res = self.client().delete('/movies/1', headers = casting_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 403)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Permission not found')
+        self.assertEqual(data['message'], 'Permission not found.')
 
 
 # Make the tests conveniently executable
