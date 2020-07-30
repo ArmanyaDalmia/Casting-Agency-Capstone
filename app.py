@@ -151,9 +151,6 @@ def create_app(test_config=None):
 
       if actor_name:
         actor.name = actor_name
-      else:
-        abort(404)
-
       if actor_age:
         actor.age = actor_age
       if actor_gender:
@@ -190,9 +187,6 @@ def create_app(test_config=None):
 
       if movie_title:
         movie.title = movie_title
-      else:
-        abort(404)
-
       if movie_release_date:
         movie.release_date = movie_release_date
 
