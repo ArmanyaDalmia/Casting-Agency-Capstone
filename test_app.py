@@ -5,7 +5,12 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app import create_app
 from models import *
+from datetime import date
 
+
+casting_assistant_header = { 'Authorization': 'Bearer {}'.format(os.environ['CASTING_ASSISTANT_TOKEN']) }
+casting_director_header = { 'Authorization': 'Bearer {}'.format(os.environ['CASTING_DIRECTOR_TOKEN']) }
+executive_producer_header = { 'Authorization': 'Bearer {}'.format(os.environ['EXECUTIVE_PRODUCER_TOKEN']) }
 
 class CastingAgencyTestCase(unittest.TestCase):
     """This class represents the casting agency test case"""
@@ -14,8 +19,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "casting_agency_test"
-        self.database_path = "postgres://{}:{}@{}/{}".format('armanyadalmia', 'armanyadalmia','localhost:5433', self.database_name)
+        self.database_path = os.environ['TEST_DATABASE_URL']
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
@@ -29,18 +33,15 @@ class CastingAgencyTestCase(unittest.TestCase):
         """Executed after reach test"""
         pass
 
-    new_question = {
-        'question': 'test question',
-        'answer': 'test answer',
-        'category': 1,
-        'difficulty': 1
+    new_actor = {
+        'name': 'Test Actor',
+        'age': 30,
+        'gender': 'Male'
     }
 
-    empty_question = {
-        'question': '',
-        'answer': None,
-        'category': '',
-        'difficulty': None
+    new_movie = {
+        'title': 'Test Movie',
+        'release_date': date.today()
     }
 
     proper_quiz_question = {
@@ -52,150 +53,198 @@ class CastingAgencyTestCase(unittest.TestCase):
     }
 
     """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
+    GET test for /actors
     """
-    def test_get_categories(self):
-        res = self.client().get('/categories')
+    def test_get_actors(self):
+        res = self.client().get('/actors', headers = casting_assistant_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertTrue(data['categories'])
+        self.assertTrue(data['actors'])
 
-    def test_get_paginated_questions(self):
-        res = self.client().get('/questions')
+    def test_401_get_actors(self):
+        res = self.client().get('/actors')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Authorization header is expected.')
+
+    """
+    GET test for /movies
+    """
+    def test_get_movies(self):
+        res = self.client().get('/movies', headers = casting_assistant_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertTrue(len(data['questions']))
-        self.assertTrue(data['total_questions'])
-        self.assertTrue(data['categories'])
+        self.assertTrue(data['movies'])
 
-    def test_404_sent_requesting_beyond_valid_page(self):
-        res = self.client().get('/questions?page=1000')
+    def test_401_get_movies(self):
+        res = self.client().get('/movies')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Authorization header is expected.')
+    
+    """
+    POST test for /actors
+    """
+    def test_create_new_actor(self):
+        res = self.client().post('/actors', json=self.new_actor, headers = casting_director_header)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['actors']))
+        self.assertEqual(data['actors'], self.new_actor)
+
+    def test_401_create_new_actor(self):
+        res = self.client().post('/actors', json=self.new_actor)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Authorization header is expected.')
+
+    """
+    POST test for /movies
+    """
+    def test_create_new_movie(self):
+        res = self.client().post('/movies', json=self.new_movie, headers = executive_producer_header)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['movies']))
+        self.assertEqual(data['movies'], self.new_movie)
+
+    def test_401_create_new_movie(self):
+        res = self.client().post('/movies', json=self.new_movie)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Authorization header is expected.')
+
+    """
+    PATCH test for /actors/<id>
+    """
+    def test_update_actor_age(self):
+        res = self.client().patch('/actors/1', json={'age': 100}, headers = casting_director_header)
+        data = json.loads(res.data)
+        actor = Actor.query.filter(Actor.id == 1).one_or_none()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(actor.format()['age'], 100)
+
+    def test_422_update_actor(self):
+        res = self.client().patch('/actors/1', headers = casting_director_header)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'unprocessable')
+
+    def test_404_update_actor_age(self):
+        res = self.client().patch('/actors/1000', json={'age': 100}, headers = casting_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'resource not found')
 
-    def test_get_paginated_questions_for_specific_category(self):
-        res = self.client().get('/categories/1/questions')
+    """
+    PATCH test for /movies/<id>
+    """
+    def test_update_movie_title(self):
+        res = self.client().patch('/movies/1', json={'title': 'Mall Cop'}, headers = casting_director_header)
         data = json.loads(res.data)
+        movie = Movie.query.filter(Movie.id == 1).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertTrue(len(data['questions']))
-        self.assertTrue(data['total_questions'])
-        self.assertTrue(data['current_category'])
+        self.assertEqual(movie.format()['title'], 'Mall Cop')
 
-    def test_404_sent_requesting_beyond_valid_page_for_specific_category(self):
-        res = self.client().get('/categories/1/questions?page=1000')
+    def test_422_update_movie(self):
+        res = self.client().patch('/movies/1', headers = casting_director_header)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'unprocessable')
+
+    def test_404_update_movie_title(self):
+        res = self.client().patch('/movies/1000', json={'title': 'Mall Cop'}, headers = casting_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'resource not found')
 
-    def test_404_sent_requesting_questions_for_invalid_category(self):
-        res = self.client().get('/categories/1000/questions')
+    """
+    DELETE test for /actors
+    """
+    def test_delete_actor(self):
+        res = self.client().delete('/actors/2', headers = casting_director_header)
+        data = json.loads(res.data)
+
+        actor = Actor.query.filter(Actor.id == 2).one_or_none()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['deleted'], 2)
+        self.assertEqual(actor, None)
+
+    def test_404_delete_actor(self):
+        res = self.client().delete('/actors/1000', headers = casting_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'resource not found')
 
-    def test_get_question_search_with_result(self):
-        res = self.client().post('/questions/search', json={'search': 'Indian'})
+    def test_403_delete_actor(self):
+        res = self.client().delete('/actors/2', headers = casting_assistant_header)
         data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Permission not found')
+
+    """
+    DELETE test for /movies
+    """
+    def test_delete_movie(self):
+        res = self.client().delete('/movies/2', headers = executive_producer_header)
+        data = json.loads(res.data)
+
+        movie = Movie.query.filter(Movie.id == 2).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(len(data['questions']), 1)
-        self.assertTrue(data['total_questions'])
- 
-    def test_get_question_search_without_result(self):
-        res = self.client().post('/questions/search', json={'search': 'something or another'})
+        self.assertEqual(data['deleted'], 2)
+        self.assertEqual(movie, None)
+
+    def test_404_delete_actor(self):
+        res = self.client().delete('/actors/1000', headers = executive_producer_header)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertEqual(len(data['questions']), 0)
-        self.assertEqual(data['total_questions'], 0)
-
-    def test_422_get_question_search_without_search_term(self):
-        res = self.client().post('/questions/search', json={'search': None})
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
+        self.assertEqual(data['message'], 'resource not found')
 
-    def test_delete_question(self):
-        res = self.client().delete('/questions/34')
+    def test_403_delete_actor(self):
+        res = self.client().delete('/actors/2', headers = casting_director_header)
         data = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 34).one_or_none()
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 34)
-        self.assertEqual(question, None)
-
-    def test_422_if_question_does_not_exist(self):
-        res = self.client().delete('/questions/1000')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.status_code, 403)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
-
-    def test_create_new_question(self):
-        res = self.client().post('/questions', json=self.new_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['created'])
-        self.assertTrue(len(data['questions']))
-        self.assertTrue(data['total_questions'])
-
-    def test_405_if_question_creation_not_allowed(self):
-        res = self.client().post('/questions/45', json=self.new_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 405)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'method not found')
-
-    def test_422_create_question_with_missing_data(self):
-        res = self.client().post('/questions', json=self.empty_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
-
-    def test_play_quiz(self):
-        res = self.client().post('/quiz', json=self.proper_quiz_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['question'])
-        self.assertNotEqual(data['question']['id'], 2)
-        self.assertNotEqual(data['question']['id'], 6)
-        self.assertEqual(data['question']['category'], 5)
-
-    def test_422_play_quiz_with_no_question(self):
-        res = self.client().post('/quiz', json={})
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
+        self.assertEqual(data['message'], 'Permission not found')
 
 
 # Make the tests conveniently executable
