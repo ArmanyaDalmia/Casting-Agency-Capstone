@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, create_engine
+from sqlalchemy import Column, String, Integer, Date, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 import os
@@ -16,6 +16,8 @@ def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
+    #db.drop_all()
+    db.create_all()
 
 
 '''
@@ -65,7 +67,7 @@ class Movie(db.Model):
 
     id = Column(Integer, primary_key=True)
     title = Column(String)
-    release_date = Column(Integer)
+    release_date = Column(Date)
 
     def __init__(self, title, release_date):
         self.title = title
