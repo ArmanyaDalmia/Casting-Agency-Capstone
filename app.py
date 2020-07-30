@@ -171,7 +171,7 @@ def create_app(test_config=None):
   @ implement endpoint
     PATCH /movies/<id>
   '''
-  @app.route('/actors/<id>', methods=['PATCH'])
+  @app.route('/movies/<id>', methods=['PATCH'])
   @requires_auth('patch:movies')
   def update_movies(token, id):
 
