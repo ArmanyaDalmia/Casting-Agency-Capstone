@@ -219,6 +219,10 @@ class AgencyTestCase(unittest.TestCase):
     """
 
     def test_delete_actor(self):
+        self.client().post(
+            '/actors',
+            json=self.new_actor,
+            headers=cast_director_header)
         res = self.client().delete('/actors/1', headers=cast_director_header)
         data = json.loads(res.data)
 
@@ -230,6 +234,10 @@ class AgencyTestCase(unittest.TestCase):
         self.assertEqual(actor, None)
 
     def test_422_delete_actor(self):
+        self.client().post(
+            '/actors',
+            json=self.new_actor,
+            headers=cast_director_header)
         res = self.client().delete(
             '/actors/1000',
             headers=cast_director_header)
@@ -240,6 +248,10 @@ class AgencyTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_403_delete_actor(self):
+        self.client().post(
+            '/actors',
+            json=self.new_actor,
+            headers=cast_director_header)
         res = self.client().delete('/actors/1', headers=cast_assistant_header)
         data = json.loads(res.data)
 
@@ -252,6 +264,10 @@ class AgencyTestCase(unittest.TestCase):
     """
 
     def test_delete_movie(self):
+        self.client().post(
+            '/movies',
+            json=self.new_movie,
+            headers=exec_producer_header)
         res = self.client().delete('/movies/1', headers=exec_producer_header)
         data = json.loads(res.data)
 
@@ -263,6 +279,10 @@ class AgencyTestCase(unittest.TestCase):
         self.assertEqual(movie, None)
 
     def test_422_delete_movie(self):
+        self.client().post(
+            '/movies',
+            json=self.new_movie,
+            headers=exec_producer_header)
         res = self.client().delete(
             '/movies/1000',
             headers=exec_producer_header)
@@ -273,6 +293,10 @@ class AgencyTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_403_delete_movie(self):
+        self.client().post(
+            '/movies',
+            json=self.new_movie,
+            headers=exec_producer_header)
         res = self.client().delete('/movies/1', headers=cast_director_header)
         data = json.loads(res.data)
 
