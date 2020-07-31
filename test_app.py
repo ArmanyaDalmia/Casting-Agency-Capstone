@@ -146,19 +146,19 @@ class AgencyTestCase(unittest.TestCase):
 
     def test_update_actor_age(self):
         res = self.client().patch(
-            '/actors/1',
+            '/actors/2',
             json={
                 'age': 100},
             headers=cast_director_header)
         data = json.loads(res.data)
-        actor = Actor.query.filter(Actor.id == 1).one_or_none()
+        actor = Actor.query.filter(Actor.id == 2).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertEqual(actor.format()['age'], 100)
 
     def test_422_update_actor(self):
-        res = self.client().patch('/actors/1', headers=cast_director_header)
+        res = self.client().patch('/actors/2', headers=cast_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
@@ -183,19 +183,19 @@ class AgencyTestCase(unittest.TestCase):
 
     def test_update_movie_title(self):
         res = self.client().patch(
-            '/movies/1',
+            '/movies/2',
             json={
                 'title': 'Update Movie'},
             headers=cast_director_header)
         data = json.loads(res.data)
-        movie = Movie.query.filter(Movie.id == 1).one_or_none()
+        movie = Movie.query.filter(Movie.id == 2).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertEqual(movie.format()['title'], 'Update Movie')
 
     def test_422_update_movie(self):
-        res = self.client().patch('/movies/1', headers=cast_director_header)
+        res = self.client().patch('/movies/2', headers=cast_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
