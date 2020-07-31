@@ -74,7 +74,6 @@ First make sure you have created a `postgres` database for the tests.
 
 To run the tests, execute:
 ```
-
 python test_flaskr.py
 ```
 
@@ -253,5 +252,5 @@ The error messages for error types 400, 401, 403 may differ though these are the
 
 ## Acknowledgements
 
-The Udacity Full Stack Nanodegree Instructor and Course developers
+The Udacity Full Stack Nanodegree Instructors and Course Developers
 
