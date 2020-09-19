@@ -10,7 +10,7 @@ The Casting Agency application is the capstone project for the Udacity Full Stac
 4) Automated testing through Unittest
 5) The API is hosted live through Heroku
 
-Heroku Link: [https://fsnd-casting-agency-capstone.herokuapp.com/](https://fsnd-casting-agency-capstone.herokuapp.com/)
+Heroku Link (no frontend at the moment): [https://fsnd-casting-agency-capstone.herokuapp.com/](https://fsnd-casting-agency-capstone.herokuapp.com/)
 
 ## Getting Started
 
